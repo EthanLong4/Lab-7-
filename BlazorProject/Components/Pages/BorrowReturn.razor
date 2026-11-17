@@ -1,0 +1,95 @@
+@page "/borrow"
+@rendermode InteractiveServer
+
+@inject BlazorProject.Services.LibraryService LibraryService
+
+<PageTitle>Borrow / Return</PageTitle>
+
+<h3>Borrow / Return</h3>
+
+<div>
+    <div>
+        <label>User</label>
+        <select @bind="selectedUserId">
+            <option value="0">-- Select User --</option>
+            @foreach (var user in users)
+            {
+                <option value="@user.Id">@user.Name</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label>Book</label>
+        <select @bind="selectedBookId">
+            <option value="0">-- Select Book --</option>
+            @foreach (var book in books)
+            {
+                <option value="@book.Id">@book.Title</option>
+            }
+        </select>
+    </div>
+    <button @onclick="BorrowClicked">Borrow</button>
+</div>
+
+<hr />
+
+<h4>Currently Borrowed</h4>
+
+@foreach (var user in users)
+{
+    var borrowed = LibraryService.GetBorrowedBookIds(user.Id);
+    if (borrowed.Count > 0)
+    {
+        <div>
+            <strong>@user.Name</strong>
+            <ul>
+                @foreach (var bookId in borrowed)
+                {
+                    var book = books.FirstOrDefault(b => b.Id == bookId);
+                    var title = book?.Title ?? $"Book #{bookId}";
+                    <li>
+                        @title
+                        <button @onclick="() => ReturnClicked(user.Id, bookId)">Return</button>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+}
+
+@code {
+    private List<BlazorProject.Models.Book> books = new();
+    private List<BlazorProject.Models.User> users = new();
+    private int selectedUserId = 0;
+    private int selectedBookId = 0;
+
+    protected override void OnInitialized()
+    {
+        Refresh();
+    }
+
+
+
+    private void BorrowClicked()
+    {
+        if (selectedUserId == 0 || selectedBookId == 0)
+            return;
+
+        LibraryService.BorrowBook(selectedUserId, selectedBookId);
+        Refresh();
+    }
+
+
+
+    private void ReturnClicked(int userId, int bookId)
+    {
+        LibraryService.ReturnBook(userId, bookId);
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        books = LibraryService.ReadBooks();
+        users = LibraryService.ReadUsers();
+    }
+}

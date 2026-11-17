@@ -1,0 +1,97 @@
+@page "/users"
+@rendermode InteractiveServer
+
+@inject BlazorProject.Services.LibraryService LibraryService
+
+
+
+
+<PageTitle>User Management</PageTitle>
+
+<h3>User Management</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in users)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.Name</td>
+                <td>
+                    <button @onclick="() => EditClicked(user)">Edit</button>
+                    <button @onclick="() => DeleteClicked(user.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<div>
+    <div>
+        <label>Name</label>
+        <input type="text" @bind="name" />
+    </div>
+    <button @onclick="SubmitForm">@(editingId > 0 ? "Save Changes" : "Add User")</button>
+</div>
+
+
+
+
+
+@code {
+    private List<BlazorProject.Models.User> users = new();
+    private string name = "";
+    private int editingId = 0;
+
+    protected override void OnInitialized()
+    {
+        users = LibraryService.ReadUsers();
+    }
+
+    private void EditClicked(BlazorProject.Models.User user)
+    {
+        editingId = user.Id;
+        name = user.Name;
+    }
+
+    private void DeleteClicked(int id)
+    {
+        LibraryService.DeleteUser(id);
+        users = LibraryService.ReadUsers();
+    }
+
+    private void SubmitForm()
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        if (editingId > 0)
+        {
+            LibraryService.EditUser(new BlazorProject.Models.User
+            {
+                Id = editingId,
+                Name = name
+            });
+        }
+        else
+        {
+            LibraryService.AddUser(new BlazorProject.Models.User
+            {
+                Name = name
+            });
+        }
+
+        name = "";
+        editingId = 0;
+        users = LibraryService.ReadUsers();
+    }
+}

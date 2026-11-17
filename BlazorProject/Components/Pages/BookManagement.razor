@@ -1,0 +1,107 @@
+@page "/books"
+@rendermode InteractiveServer
+
+@inject BlazorProject.Services.LibraryService LibraryService
+
+
+
+
+<PageTitle>Book Management</PageTitle>
+
+<h3>Book Management</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in books)
+        {
+            <tr>
+                <td>@book.Id</td>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+                <td>
+                    <button @onclick="() => EditClicked(book)">Edit</button>
+                    <button @onclick="() => DeleteClicked(book.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<div>
+    <div>
+        <label>Title</label>
+        <input type="text" @bind="title" />
+    </div>
+    <div>
+        <label>Author</label>
+        <input type="text" @bind="author" />
+    </div>
+    <button @onclick="SubmitForm">@(editingId > 0 ? "Save Changes" : "Add Book")</button>
+</div>
+
+
+
+
+@code {
+    private List<BlazorProject.Models.Book> books = new();
+    private string title = "";
+    private string author = "";
+    private int editingId = 0;
+
+    protected override void OnInitialized()
+    {
+        books = LibraryService.ReadBooks();
+    }
+
+    private void EditClicked(BlazorProject.Models.Book book)
+    {
+        editingId = book.Id;
+        title = book.Title;
+        author = book.Author;
+    }
+
+    private void DeleteClicked(int id)
+    {
+        LibraryService.DeleteBook(id);
+        books = LibraryService.ReadBooks();
+    }
+
+    private void SubmitForm()
+    {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(author))
+            return;
+
+        if (editingId > 0)
+        {
+            LibraryService.EditBook(new BlazorProject.Models.Book
+            {
+                Id = editingId,
+                Title = title,
+                Author = author
+            });
+        }
+        else
+        {
+            LibraryService.AddBook(new BlazorProject.Models.Book
+            {
+                Title = title,
+                Author = author
+            });
+        }
+
+        title = "";
+        author = "";
+        editingId = 0;
+        books = LibraryService.ReadBooks();
+    }
+}

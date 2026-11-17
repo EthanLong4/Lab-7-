@@ -1,0 +1,10 @@
+Using xUnit
+
+
+
+
+
+Running blazorproject.test should allow you to test for future changes to the library service by  allowing you to see if the unit test pass or fail. 
+Does this through dotnet test, getting a command-line response.  
+
+dotnet test 
